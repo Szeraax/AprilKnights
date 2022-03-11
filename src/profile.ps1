@@ -20,3 +20,16 @@ if ($env:MSI_SECRET) {
 # Enable-AzureRmAlias
 
 # You can also define functions or aliases that can be referenced in any of your PowerShell functions.
+function Expand-Uri([string]$Uri) {
+    try { Invoke-WebRequest -MaximumRedirection 0 -Uri $Uri -ErrorAction Stop }
+    catch {
+        if ($_.exception.response.headers.location) { [string]$_.exception.response.headers.location }
+        else {
+            "{0} ({1})- {2}" -f @(
+                [int]$_.exception.response.StatusCode
+                [string]$_.exception.response.ReasonPhrase
+                [string]$_.targetObject.requestUri
+            )
+        }
+    }
+}
