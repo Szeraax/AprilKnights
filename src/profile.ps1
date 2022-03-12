@@ -33,3 +33,28 @@ function Expand-Uri([string]$Uri) {
         }
     }
 }
+
+function Assert-Signature {
+    if (-not $Request.Headers."x-signature-timestamp" -or -not $Request.Headers."x-signature-ed25519") {
+        Push-OutputBinding -Name Response -Value ([HttpResponseContext]@{
+                StatusCode = [HttpStatusCode]::Unauthorized
+            })
+        return
+    }
+    else {
+        $ed = [Rebex.Security.Cryptography.Ed25519]::new()
+        [byte[]]$public = $ENV:APP_PUBLIC_KEY -replace "(..)", '0x$1|' -split "\|" | Where-Object { $_ }
+        $ed.FromPublicKey($public)
+        [string]$message = $Request.Headers."x-signature-timestamp" + $Request.RawBody
+        [byte[]]$signature = $Request.Headers."x-signature-ed25519" -replace "(..)", '0x$1|' -split "\|" | Where-Object { $_ }
+        $result = $ed.VerifyMessage([System.Text.Encoding]::ASCII.GetBytes($message), $signature)
+        if ($result -eq $false) {
+            Push-OutputBinding -Name Response -Value ([HttpResponseContext]@{
+                    StatusCode = [HttpStatusCode]::Unauthorized
+                })
+            return
+        }
+    }
+}
+
+Add-Type -Path .\Rebex.Ed25519.dll
