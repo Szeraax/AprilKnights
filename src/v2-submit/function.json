@@ -1,0 +1,26 @@
+{
+  "bindings": [
+    {
+      "authLevel": "anonymous",
+      "type": "httpTrigger",
+      "direction": "in",
+      "name": "Request",
+      "methods": [
+        "get",
+        "post"
+      ]
+    },
+    {
+      "type": "http",
+      "direction": "out",
+      "name": "Response"
+    },
+    {
+      "name": "QueueToV2",
+      "type": "queue",
+      "direction": "out",
+      "queueName": "v2-queue",
+      "connection": "AzureWebJobsStorage"
+    }
+  ]
+}

@@ -24,12 +24,15 @@ function Expand-Uri([string]$Uri) {
     try { Invoke-WebRequest -MaximumRedirection 0 -Uri $Uri -ErrorAction Stop }
     catch {
         if ($_.exception.response.headers.location) { [string]$_.exception.response.headers.location }
-        else {
+        elseif ($_.exception.response.StatusCode) {
             "{0} ({1})- {2}" -f @(
                 [int]$_.exception.response.StatusCode
                 [string]$_.exception.response.ReasonPhrase
                 [string]$_.targetObject.requestUri
             )
+        }
+        else {
+            "Unknown error for this URL: {0}" -f [string]$_.targetObject.requestUri
         }
     }
 }
@@ -39,7 +42,7 @@ function Assert-Signature {
         Push-OutputBinding -Name Response -Value ([HttpResponseContext]@{
                 StatusCode = [HttpStatusCode]::Unauthorized
             })
-        return
+        throw
     }
     else {
         $ed = [Rebex.Security.Cryptography.Ed25519]::new()
@@ -52,7 +55,7 @@ function Assert-Signature {
             Push-OutputBinding -Name Response -Value ([HttpResponseContext]@{
                     StatusCode = [HttpStatusCode]::Unauthorized
                 })
-            return
+            throw
         }
     }
 }

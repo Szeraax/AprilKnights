@@ -7,7 +7,6 @@ param($Request, $TriggerMetadata)
 Write-Host "PowerShell HTTP trigger function processed a request."
 
 # Interact with query parameters or the body of the request.
-
 try { Assert-Signature }
 catch { return }
 
@@ -16,27 +15,12 @@ if ($Request.Body.type -eq 1) {
         type = 1
     }
 }
-elseif ($uri = $Request.Body.data.options.where{ $_.name -eq "link" }.value) {
-    if ($uri -notmatch "^http") { $uri = "https://tinyurl.com/$uri" }
-    $response = Expand-Uri $uri
-    $response | Write-Host
-    $response = @{
-        type = 4
-        data = @{
-            content = $response
-        }
-    }
-}
-elseif ($Request.Body.data.name -eq "Thank") {
-    $response = @{
-        type = 4
-        data = @{
-            content = "Expando is grateful to be noticed by <@$($Request.Body.member.user.id)> (Brought to you by <@291431034250067968>)"
-        }
-    }
-}
 elseif ($Request.Body) {
-    $response = $Request.Body
+    Push-OutputBinding -name QueueToV2 -value $Request.Body
+    $response = @{
+        type    = 5
+        content = "Pending"
+    }
 }
 else {
     $response = "No body sent"

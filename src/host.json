@@ -14,5 +14,10 @@
   },
   "managedDependency": {
     "enabled": true
+  },
+  "extensions": {
+    "queues": {
+      "maxPollingInterval": "00:00:05"
+    }
   }
 }
