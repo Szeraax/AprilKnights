@@ -37,7 +37,7 @@ $invokeRestMethod_splat = @{
     MaximumRetryCount = 5
     RetryIntervalSec  = 2
 }
-try { Invoke-RestMethod @invokeRestMethod_splat }
+try { Invoke-RestMethod @invokeRestMethod_splat | Out-Null }
 catch {
     "failed" | Write-Host
     $invokeRestMethod_splat | ConvertTo-Json -Depth 3 -Compress
