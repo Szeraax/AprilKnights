@@ -14,6 +14,7 @@ if ($Request.Body.type -eq 1) {
     $response = @{
         type = 1
     }
+    Write-Host "ACKing ping"
 }
 elseif ($Request.Body) {
     Push-OutputBinding -name QueueToV2 -value $Request.Body
@@ -21,9 +22,11 @@ elseif ($Request.Body) {
         type    = 5
         content = "Pending"
     }
+    Write-Host "Writing item to queue"
 }
 else {
     $response = "No body sent"
+    Write-Host $response
 }
 
 # Associate values to output bindings by calling 'Push-OutputBinding'.

@@ -38,26 +38,33 @@ function Expand-Uri([string]$Uri) {
 }
 
 function Assert-Signature {
+    $appid = $Request.Body.application_id
+    $publicKey = (Get-Item env:\APPID_PUBLICKEY_$appid -ea silent).value
+    if (-not $appid -or -not $publicKey) {
+        Push-OutputBinding -Name Response -Value ([HttpResponseContext]@{
+                StatusCode = [HttpStatusCode]::BadRequest
+            })
+        throw
+    }
     if (-not $Request.Headers."x-signature-timestamp" -or -not $Request.Headers."x-signature-ed25519") {
         Push-OutputBinding -Name Response -Value ([HttpResponseContext]@{
                 StatusCode = [HttpStatusCode]::Unauthorized
             })
         throw
     }
-    else {
-        $ed = [Rebex.Security.Cryptography.Ed25519]::new()
-        [byte[]]$public = $ENV:APP_PUBLIC_KEY -replace "(..)", '0x$1|' -split "\|" | Where-Object { $_ }
-        $ed.FromPublicKey($public)
-        [string]$message = $Request.Headers."x-signature-timestamp" + $Request.RawBody
-        [byte[]]$signature = $Request.Headers."x-signature-ed25519" -replace "(..)", '0x$1|' -split "\|" | Where-Object { $_ }
-        $result = $ed.VerifyMessage([System.Text.Encoding]::ASCII.GetBytes($message), $signature)
-        if ($result -eq $false) {
-            Push-OutputBinding -Name Response -Value ([HttpResponseContext]@{
-                    StatusCode = [HttpStatusCode]::Unauthorized
-                })
-            throw
-        }
+    $ed = [Rebex.Security.Cryptography.Ed25519]::new()
+    [byte[]]$public = $publicKey -replace "(..)", '0x$1|' -split "\|" | Where-Object { $_ }
+    $ed.FromPublicKey($public)
+    [string]$message = $Request.Headers."x-signature-timestamp" + $Request.RawBody
+    [byte[]]$signature = $Request.Headers."x-signature-ed25519" -replace "(..)", '0x$1|' -split "\|" | Where-Object { $_ }
+    $result = $ed.VerifyMessage([System.Text.Encoding]::ASCII.GetBytes($message), $signature)
+    if ($result -eq $false) {
+        Push-OutputBinding -Name Response -Value ([HttpResponseContext]@{
+                StatusCode = [HttpStatusCode]::Unauthorized
+            })
+        throw
     }
+    Write-Host "Signature is valid"
 }
 
 Add-Type -Path .\Rebex.Ed25519.dll
