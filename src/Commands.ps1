@@ -1,5 +1,4 @@
 param(
-    [switch]$GuildSpecific,
     $GuildID = "",
     [ValidateSet("GetBearer", "ListCommands", "AddSlashCommand", "AddUserCommand", "AddMessageCommand", "RemoveCommand")]
     $Command,
@@ -17,7 +16,7 @@ function ConvertTo-Base64 ($String) {
 }
 
 $url = "https://discord.com/api/v8/applications/$Applicationid/commands"
-if ($GuildSpecific) {
+if ($GuildID) {
     $url = $url -replace "commands", "guilds/$guildID/commands"
 }
 $headers = @{Authorization = "Bearer $bearer" }
@@ -38,22 +37,41 @@ switch ($command) {
     "AddSlashCommand" {
         Invoke-RestMethod -Headers $headers -Uri $url -Method Post -ContentType application/json -Body (@{
                 type        = 1
-                name        = "Expando"
-                description = "Attempt to find the next destination of a URI"
+                name        = "interview"
+                description = "Tools for interviewing"
                 options     = @(
                     @{
-                        type        = 3
-                        name        = "link"
-                        description = "The URI to lookup"
-                        required    = $true
+                        type        = 2
+                        name        = "get"
+                        description = "Retrieve data"
+                        options     = @(
+                            @{
+                                type        = 1
+                                name        = "battalions"
+                                description = "Link to the current battalions list"
+                            }
+                        )
+                    }
+                    @{
+                        type        = 2
+                        name        = "verify"
+                        description = "check data"
+                        options     = @(
+                            @{
+                                type        = 1
+                                name        = "reddit"
+                                description = "Generate a link that a user can use to verify their reddit account"
+                            }
+                        )
                     }
                 )
-            } | ConvertTo-Json)
+            } | ConvertTo-Json -Depth 7)
     }
     "AddUserCommand" {
+        $url
         Invoke-RestMethod -Headers $headers -Uri $url -Method Post -ContentType application/json -Body (@{
                 type = 2
-                name = "Thank"
+                name = "Battalion Announce"
             } | ConvertTo-Json)
     }
     "AddMessageCommand" {
