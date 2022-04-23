@@ -21,7 +21,7 @@ if ($env:MSI_SECRET) {
 
 # You can also define functions or aliases that can be referenced in any of your PowerShell functions.
 function Expand-Uri([string]$Uri) {
-    try { Invoke-WebRequest -MaximumRedirection 0 -Uri $Uri -ErrorAction Stop }
+    try { Invoke-RestMethod -MaximumRedirection 0 -Uri $Uri -ErrorAction Stop }
     catch {
         if ($_.exception.response.headers.location) { [string]$_.exception.response.headers.location }
         elseif ($_.exception.response.StatusCode) {
@@ -68,3 +68,17 @@ function Assert-Signature {
 }
 
 Add-Type -Path .\Rebex.Ed25519.dll
+
+function Get-Comments ($obj) {
+    if ($obj.author) {
+        [PSCustomObject][ordered]@{
+            author    = $obj.author
+            permalink = "https://reddit.com" + $obj.permalink
+            body      = $obj.body
+            created   = $obj.created_utc
+        }
+    }
+    if ($obj.data) { $obj.data | ForEach-Object { Get-Comments $_ } }
+    elseif ($obj.children) { $obj.children | ForEach-Object { Get-Comments $_ } }
+    elseif ($obj.replies) { $obj.replies | ForEach-Object { Get-Comments $_ } }
+}
