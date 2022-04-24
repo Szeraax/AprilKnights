@@ -21,6 +21,13 @@
       "direction": "out",
       "queueName": "v2-queue",
       "connection": "AzureWebJobsStorage"
+    },
+    {
+      "name": "TableBinding",
+      "type": "table",
+      "direction": "out",
+      "tableName": "Squirelike",
+      "connection": "AzureWebJobsStorage"
     }
   ]
 }

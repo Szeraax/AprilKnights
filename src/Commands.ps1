@@ -52,18 +52,6 @@ switch ($command) {
                             }
                         )
                     }
-                    @{
-                        type        = 2
-                        name        = "verify"
-                        description = "check data"
-                        options     = @(
-                            @{
-                                type        = 1
-                                name        = "reddit"
-                                description = "Generate a link that a user can use to verify their reddit account"
-                            }
-                        )
-                    }
                 )
             } | ConvertTo-Json -Depth 7)
     }
@@ -71,7 +59,7 @@ switch ($command) {
         $url
         Invoke-RestMethod -Headers $headers -Uri $url -Method Post -ContentType application/json -Body (@{
                 type = 2
-                name = "Battalion Announce"
+                name = "Verify Reddit"
             } | ConvertTo-Json)
     }
     "AddMessageCommand" {
