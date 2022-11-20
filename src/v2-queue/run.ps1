@@ -68,19 +68,51 @@ elseif ($item.Code) {
 
         if ($reddituser = $userConnections | Where-Object type -EQ "reddit") {
             $data.RedditUser = $reddituser.name
-            $irmSplat.Uri = "https://www.reddit.com/r/AprilKnights/comments/gdbsi0/it_is_the_age_of_the_imposter_hile_and_welcome.json"
-            $pledges = Invoke-RestMethod @irmSplat
-            $comments = Get-Comments $pledges[1..99]
-            $userComments = $comments | Where-Object author -EQ $data.redditUser | Sort-Object -desc created
-            if ($userComments) {
-                if ($userComments.count -ge 1) {
-                    $addin = " (comment 1 of their {0} comments in thread)" -f $comments.count
+            $threads = Get-ChildItem ENV:APP_OATH_* | Sort-Object Name -Desc | Select-Object -expand Value
+            $attempt = 0
+            $current = 0
+            do {
+                if ($threads[$current]) {
+                    try {
+                        $irmSplat.Uri = $threads[$current] + ".json"
+                        "URI:{0}" -f $irmSplat.Uri | Write-Host
+                        $pledges = Invoke-RestMethod @irmSplat
+                        $comments = Get-Comments $pledges[1..9999]
+                        $userComments = $comments | Where-Object author -EQ $data.redditUser | Sort-Object -desc created
+                        "Current: $current, Comments count: {0}, user comments count: {1}" -f $comments.count, $userComments.count | Write-Host
+                        if (-not $userComments) { $current++ }
+                    }
+                    catch {
+                        "Failed $_" | Write-Host
+                        $attempt++
+                        Start-Sleep 3
+                        if ($attempt -gt 3) {
+                            # Give error message and ask them to try again?
+                        }
+                    }
                 }
-                $redditMessage = "{1}. They left this comment in the pledge thread${addin}:`n> {2}`nSrc: {3}" -f @(
+                else {
+                    $attempt++
+                }
+            } until ($userComments -or $attempt -gt 3)
+            $redditMessage = ""
+            if ($userComments) {
+                if ($userComments.count -gt 1) {
+                    $addin = " (comment 1 of their {0} comments in thread)" -f $userComments.count
+                }
+
+                $redditMessage += "{0}. They left this comment in the pledge thread${addin}:`n> {1}`nSrc: {2}" -f @(
                     $data.redditUser
                     $userComments[0].body
                     $userComments[0].permalink
                 )
+
+                if ($current -gt 0) {
+                    $redditMessage += "`nError: No comments in current oath thread. Please have applicant pledge in the current oath thread"
+                }
+            }
+            elseif ($attempt -gt 3) {
+                $response = "Error occurred. Please try again."
             }
             else {
                 $redditMessage = "{0}. They HAVE NOT left any comment in the pledge thread located here:`n{1}`n<@{2}>, you need to go pledge your support in this thread." -f @(
@@ -106,7 +138,7 @@ elseif ($item.Code) {
         do {
             try {
                 $i++
-                Add-AzTableRow -Table $table -PartitionKey "Authorized" -RowKey ($user.id + $user.username) -UpdateExisting -Property $data -ea stop
+                Add-AzTableRow -Table $table -PartitionKey "Authorized" -RowKey ($user.id + $user.username) -UpdateExisting -property $data -ea stop
                 $pending = $false
             }
             catch {
@@ -115,8 +147,9 @@ elseif ($item.Code) {
             }
         } while ($i -le 3 -or $pending)
 
-
-        $response = "For user <@{0}>, their reddit account is $redditMessage" -f $data.DiscordId
+        if ($redditMessage) {
+            $response = "For user <@{0}>, their reddit account is $redditMessage" -f $data.DiscordId
+        }
 
         $item = @{
             application_id = $row.ApplicationId
