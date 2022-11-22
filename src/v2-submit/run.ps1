@@ -5,7 +5,7 @@ param($Request, $TriggerMetadata)
 
 # Write to the Azure Functions log stream.
 Write-Host "PowerShell HTTP trigger function processed a request."
-
+$request | ConvertTo-Json -Compress | Write-Host
 # Interact with query parameters or the body of the request.
 try { Assert-Signature }
 catch { return }
