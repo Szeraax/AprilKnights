@@ -1,0 +1,18 @@
+{
+  "bindings": [
+    {
+      "name": "QueueItem",
+      "type": "queueTrigger",
+      "direction": "in",
+      "queueName": "table-queuetrigger",
+      "connection": "AzureWebJobsStorage"
+    },
+    {
+      "name": "TableBinding",
+      "type": "table",
+      "direction": "out",
+      "tableName": "Squirelike",
+      "connection": "AzureWebJobsStorage"
+    }
+  ]
+}
