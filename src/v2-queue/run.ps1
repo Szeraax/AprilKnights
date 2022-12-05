@@ -101,7 +101,7 @@ elseif ($item.Code) {
                     $addin = " (comment 1 of their {0} comments in thread)" -f $userComments.count
                 }
 
-                $redditMessage += "{0}. They left this comment in the pledge thread${addin}:`n> {1}`nSrc: {2}" -f @(
+                $redditMessage += "{0} (https://reddit.com/u/{0}). They left this comment in the pledge thread${addin}:`n> {1}`nSrc: {2}" -f @(
                     $data.redditUser
                     $userComments[0].body
                     $userComments[0].permalink
