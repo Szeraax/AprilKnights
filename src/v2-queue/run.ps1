@@ -126,9 +126,13 @@ elseif ($item.Code) {
             $redditMessage = "NOT FOUND!`n<@{0}>, you need to connect your Discord account to your Reddit account for verification." -f $user.id
         }
 
-        $table = Get-AzTableTable -resourceGroup AprilKnights -TableName Squirelike -storageAccountName aprilknights80e7
+        $table = Get-AzTableTable -resourceGroup AprilKnights -TableName Squirelike -storageAccountName aprilknights
         if (-not $table) { throw "no table found" }
-        $row = Get-AzTableRow -Table $table | Where-Object rowkey -Match $user.id | Sort-Object TableTimestamp | Select-Object -Last 1
+        $row = Get-AzTableRow -Table $table |
+        Where-Object RowKey -Match $user.id |
+        Where-Object PartitionKey -EQ "Candidate" |
+        Sort-Object TableTimestamp |
+        Select-Object -Last 1
         if (-not $row) { throw "no row found" }
         $row | ConvertTo-Json -Compress | Write-Host
         $data.Requestor = $row.Requestor
