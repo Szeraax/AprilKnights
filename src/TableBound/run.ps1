@@ -4,3 +4,6 @@ param($QueueItem, $TriggerMetadata)
 # Write out the queue message and insertion time to the information log.
 Write-Host "PowerShell queue trigger function processed work item: $QueueItem"
 Write-Host "Queue item insertion time: $($TriggerMetadata.InsertionTime)"
+$QueueItem | convertto-json -Compress | write-host
+
+Push-OutputBinding -Name TableBinding -Value $QueueItem
