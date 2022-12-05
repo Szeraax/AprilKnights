@@ -126,24 +126,29 @@ elseif ($item.Code) {
             $redditMessage = "NOT FOUND!`n<@{0}>, you need to connect your Discord account to your Reddit account for verification." -f $user.id
         }
 
-        $table = Get-AzTableTable -resourceGroup AprilKnights -TableName Squirelike -storageAccountName aprilknights
-        if (-not $table) { throw "no table found" }
-        $row = Get-AzTableRow -Table $table |
-        Where-Object RowKey -Match $user.id |
+        $AzDataTableEntity_params = @{
+            ConnectionString = $ENV:AzureWebJobsStorage
+            TableName        = "Squirelike"
+        }
+        $row = Get-AzDataTableEntity @AzDataTableEntity_params -Filter "PartitionKey eq 'Candidate' and Timestamp gt datetime'$([Datetime]::now.AddDays(-2).ToString('yyyy-MM-dd'))'" |
         Where-Object PartitionKey -EQ "Candidate" |
-        Sort-Object TableTimestamp |
+        Where-Object RowKey -Match $user.id |
+        Sort-Object Timestamp |
         Select-Object -Last 1
         if (-not $row) { throw "no row found" }
+        "Row'd" | Write-Host
         $row | ConvertTo-Json -Compress | Write-Host
         $data.Requestor = $row.Requestor
         $data.Name = $row.Name
         $data.Token = $row.Token
+        $data.PartitionKey = "Authorized"
+        $data.RowKey = $user.id + $user.username
         $i = 0
         $pending = $true
         do {
             try {
                 $i++
-                Add-AzTableRow -Table $table -PartitionKey "Authorized" -RowKey ($user.id + $user.username) -UpdateExisting -property $data -ea stop
+                Add-AzDataTableEntity @AzDataTableEntity_params -Force -Entity $data -ea stop
                 $pending = $false
             }
             catch {
