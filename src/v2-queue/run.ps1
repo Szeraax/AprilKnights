@@ -182,6 +182,7 @@ $invokeRestMethod_splat = @{
     Body              = (@{
             type    = 4
             content = $response
+            embeds  = @()
         } | ConvertTo-Json)
     MaximumRetryCount = 5
     RetryIntervalSec  = 2
