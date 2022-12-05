@@ -130,6 +130,7 @@ elseif ($item.Code) {
         if (-not $table) { throw "no table found" }
         $row = Get-AzTableRow -Table $table | Where-Object rowkey -Match $user.id | Sort-Object TableTimestamp | Select-Object -Last 1
         if (-not $row) { throw "no row found" }
+        $row | ConvertTo-Json -Compress | Write-Host
         $data.Requestor = $row.Requestor
         $data.Name = $row.Name
         $data.Token = $row.Token
@@ -142,6 +143,7 @@ elseif ($item.Code) {
                 $pending = $false
             }
             catch {
+                "Trying again!"
                 Start-Sleep 1
                 $_.Exception | Write-Host
             }
