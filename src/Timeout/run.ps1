@@ -12,6 +12,7 @@ $AzDataTableEntity_params = @{
     TableName        = "Squirelike"
     ErrorAction      = "Stop"
 }
+
 try {
     $row = Get-AzDataTableEntity @AzDataTableEntity_params -Filter "PartitionKey eq 'Candidate' and Timestamp gt datetime'$([Datetime]::now.AddDays(-2).ToString('yyyy-MM-dd'))'" |
     Where-Object PartitionKey -EQ "Candidate" |
@@ -19,7 +20,7 @@ try {
     Sort-Object Timestamp |
     Select-Object -Last 1
 
-    if ($row.Created -and $null -eq $row.Token) {
+    if ($row.Created -and [string]::IsNullOrWhiteSpace($row.Token)) {
         "Clear!" | Write-Host
     }
     elseif ($QueueItem.Created -as [datetime] -lt [datetime]::UtcNow.AddMinutes(-5)) {
