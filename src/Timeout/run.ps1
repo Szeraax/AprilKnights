@@ -27,7 +27,7 @@ try {
         Write-Host "10 minutes old!"
         # Check to see if token still exists. If yes, then update and say that this link is expired.
         $invokeRestMethod_splat = @{
-            Uri               = "https://discord.com/api/v8/webhooks/{0}/{1}/messages/@original" -f $QueueItem.ApplicationId, $QueueItem.Token
+            Uri               = "https://discord.com/api/v8/webhooks/{0}/{1}/messages/@original" -f $row.ApplicationId, $row.Token
             Method            = "Patch"
             ContentType       = "application/json"
             Body              = (@{
@@ -49,7 +49,7 @@ try {
         # Check to see if token still exists. If yes, then say this is takin a while
         # Then throw so it re-queues
         $invokeRestMethod_splat = @{
-            Uri               = "https://discord.com/api/v8/webhooks/{0}/{1}/messages/@original" -f $QueueItem.ApplicationId, $QueueItem.Token
+            Uri               = "https://discord.com/api/v8/webhooks/{0}/{1}/messages/@original" -f $row.ApplicationId, $row.Token
             Method            = "Patch"
             ContentType       = "application/json"
             Body              = (@{
