@@ -166,9 +166,11 @@ elseif ($item.Code) {
             application_id = $row.ApplicationId
             token          = $row.Token
         }
+        $row.Token = $null
+        Add-AzDataTableEntity @AzDataTableEntity_params -Force -Entity $row -ea stop
     }
     catch {
-        $body = "Failed to authorize2, please click the link again. "
+        $body = "Failed to authorize! please click the link again. "
         $body += $irmSplat | ConvertTo-Json -Compress -Depth 7
     }
 }

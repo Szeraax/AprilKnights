@@ -17,7 +17,9 @@
   },
   "extensions": {
     "queues": {
-      "maxPollingInterval": "00:00:05"
+      "maxPollingInterval": "00:00:15",
+      "visibilityTimeout": "00:01:00",
+      "maxDequeueCount": 15
     }
   },
   "concurrency": {
