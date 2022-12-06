@@ -118,7 +118,7 @@ elseif ($item.Code) {
                 $response = "Error occurred. Please try again."
             }
             else {
-                $redditMessage = "{0}. They HAVE NOT left any comment in the pledge thread located here:`n{1}`n<@{2}>, you need to go pledge your support in this thread." -f @(
+                $redditMessage = "{0}. They HAVE NOT left any comment in the pledge thread located here:`n{1}`n<@{2}>, you need to go pledge your support in this thread.`n`nOnce complete, please run the ``/interview verify reddit`` command again." -f @(
                     $data.redditUser
                     $threads[0]
                     $user.id
@@ -140,7 +140,6 @@ elseif ($item.Code) {
         Select-Object -Last 1
         if (-not $row) { throw "no row found" }
         "Row'd" | Write-Host
-        $row | ConvertTo-Json -Compress | Write-Host
         $data.Requestor = $row.Requestor
         $data.Name = $row.Name
         $data.Token = $row.Token
@@ -170,7 +169,9 @@ elseif ($item.Code) {
             token          = $row.Token
         }
         $row.Token = $null
+        $row | ConvertTo-Json -Compress | Write-Host
         Add-AzDataTableEntity @AzDataTableEntity_params -Force -Entity $row -ea stop
+        "Done!" | Write-Host
     }
     catch {
         $body = "Failed to authorize! please click the link again. "
