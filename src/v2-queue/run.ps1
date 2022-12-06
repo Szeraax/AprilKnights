@@ -80,21 +80,24 @@ elseif ($item.Code) {
                         $comments = Get-Comments $pledges[1..9999]
                         $userComments = $comments | Where-Object author -EQ $data.redditUser | Sort-Object -desc created | Sort-Object depth
                         "Current: $current, Comments count: {0}, user comments count: {1}" -f $comments.count, $userComments.count | Write-Host
-                        if (-not $userComments) { $current++ }
+                        if (-not $userComments) {
+                            $current++
+                            $attempt = 0
+                        }
                     }
                     catch {
                         "Failed $_" | Write-Host
                         $attempt++
                         Start-Sleep 3
                         if ($attempt -gt 3) {
-                            # Give error message and ask them to try again?
+                            $response = "Error occurred. Please try again."
                         }
                     }
                 }
                 else {
                     $attempt++
                 }
-            } until ($userComments -or $attempt -gt 3)
+            } until ($userComments -or $attempt -gt 3 -or $current -ge $threads.count)
             $redditMessage = ""
             if ($userComments) {
                 if ($userComments.count -gt 1) {
@@ -117,7 +120,7 @@ elseif ($item.Code) {
             else {
                 $redditMessage = "{0}. They HAVE NOT left any comment in the pledge thread located here:`n{1}`n<@{2}>, you need to go pledge your support in this thread." -f @(
                     $data.redditUser
-                    $irmSplat.Uri -replace ".json$"
+                    $threads[0]
                     $user.id
                 )
             }

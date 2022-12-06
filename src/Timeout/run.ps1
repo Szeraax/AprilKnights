@@ -31,7 +31,7 @@ try {
             ContentType       = "application/json"
             Body              = (@{
                     type    = 4
-                    content = "Link expired. Please run the `/interview verify reddit` command again."
+                    content = 'Link expired. Please run the `/interview verify reddit` command again.'
                     embeds  = @()
                 } | ConvertTo-Json)
             MaximumRetryCount = 5
@@ -43,8 +43,6 @@ try {
             $invokeRestMethod_splat | ConvertTo-Json -Depth 3 -Compress
             $_
         }
-        # If successful in overwrite, then quietly continue.
-        # If not, throw to try again.
     }
     elseif ($QueueItem.Created -as [datetime] -lt [datetime]::UtcNow.AddMinutes(-1)) {
         # Check to see if token still exists. If yes, then say this is takin a while
