@@ -76,6 +76,7 @@ function Get-Comments ($obj) {
             permalink = "https://reddit.com" + $obj.permalink
             body      = $obj.body
             created   = $obj.created_utc
+            depth     = $obj.depth
         }
     }
     if ($obj.data) { $obj.data | ForEach-Object { Get-Comments $_ } }

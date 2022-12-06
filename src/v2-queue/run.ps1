@@ -78,7 +78,7 @@ elseif ($item.Code) {
                         "URI:{0}" -f $irmSplat.Uri | Write-Host
                         $pledges = Invoke-RestMethod @irmSplat
                         $comments = Get-Comments $pledges[1..9999]
-                        $userComments = $comments | Where-Object author -EQ $data.redditUser | Sort-Object -desc created
+                        $userComments = $comments | Where-Object author -EQ $data.redditUser | Sort-Object -desc created | Sort-Object depth
                         "Current: $current, Comments count: {0}, user comments count: {1}" -f $comments.count, $userComments.count | Write-Host
                         if (-not $userComments) { $current++ }
                     }
@@ -123,7 +123,7 @@ elseif ($item.Code) {
             }
         }
         else {
-            $redditMessage = "NOT FOUND!`n<@{0}>, you need to connect your Discord account to your Reddit account for verification." -f $user.id
+            $redditMessage = "NOT FOUND!`n<@{0}>, you need to connect your Discord account to your Reddit account for verification. Once complete, please run the command again." -f $user.id
         }
 
         $AzDataTableEntity_params = @{
