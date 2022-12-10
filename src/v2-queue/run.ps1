@@ -104,10 +104,11 @@ elseif ($item.Code) {
                     $addin = " (comment 1 of their {0} comments in thread)" -f $userComments.count
                 }
 
-                $redditMessage += "{0} (https://reddit.com/u/{0}). They left this comment in the pledge thread${addin}:`n> {1}`nSrc: {2}" -f @(
+                $redditMessage += "{0} (https://reddit.com/u/{0}). They left this comment in the pledge thread${addin}:`n> {1}`nSrc: {2}`n<@{3}>, if someone approves your pledge, you will be allowed to remove the discord/reddit connection in your Discord settings." -f @(
                     $data.redditUser
                     $userComments[0].body
                     $userComments[0].permalink
+                    $data.DiscordId
                 )
 
                 if ($current -gt 0) {
@@ -168,12 +169,11 @@ elseif ($item.Code) {
             application_id = $row.ApplicationId
             token          = $row.Token
         }
-        $row.Token = $null
-        $row | ConvertTo-Json -Compress | Write-Host
+        $row.Remove("Token")
         Add-AzDataTableEntity @AzDataTableEntity_params -Force -Entity $row -ea stop
-        "Done!" | Write-Host
     }
     catch {
+        $_
         $body = "Failed to authorize! please click the link again. "
         $body += $irmSplat | ConvertTo-Json -Compress -Depth 7
     }
