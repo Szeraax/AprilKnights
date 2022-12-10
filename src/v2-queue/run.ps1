@@ -104,7 +104,7 @@ elseif ($item.Code) {
                     $addin = " (comment 1 of their {0} comments in thread)" -f $userComments.count
                 }
 
-                $redditMessage += "{0} (https://reddit.com/u/{0}). They left this comment in the pledge thread${addin}:`n{1}`nSrc: {2}`n<@{3}>, if someone approves your pledge, you will be allowed to remove the discord/reddit connection in your Discord settings." -f @(
+                $redditMessage += "{0} (https://reddit.com/u/{0}). They left this comment in the pledge thread${addin}:`n{1}`nSrc: {2}`n<@{3}>, you can now remove the discord/reddit connection in your Discord settings." -f @(
                     $data.redditUser
                     $userComments[0].body -replace "`n`n`n", "`n" -replace "(?m)^", "> "
                     $userComments[0].permalink
