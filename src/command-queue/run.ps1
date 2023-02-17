@@ -59,16 +59,16 @@ catch {
     $_
 }
 if ($channelDone -and $roleDone) {
-    $response.Add("Completed adding user to role '$role_name' and announcing them in channel '$channel_name'")
+    $response.Add("Completed adding <@$($QueueItem.DiscordUserID)> to role '$role_name' and announcing them in channel '$channel_name'")
 }
 elseif ($channelDone) {
-    $response.Add("Announced user in channel '$channel_name', but did not successfully add them to the role '$role_name'")
+    $response.Add("Announced <@$($QueueItem.DiscordUserID)> in channel '$channel_name', but did not successfully add them to the role '$role_name'")
 }
 elseif ($roleDone) {
-    $response.Add("Completed adding user to role '$role_name', but did not successfully announce them in the channel '$channel_name'")
+    $response.Add("Completed adding <@$($QueueItem.DiscordUserID)> to role '$role_name', but did not successfully announce them in the channel '$channel_name'")
 }
 else {
-    $response.Add("Did not successfully add user to role '$role_name' or announce them in the channel '$channel_name'")
+    $response.Add("Did not successfully add <@$($QueueItem.DiscordUserID)> to role '$role_name' or announce them in the channel '$channel_name'")
 }
 
 # The most authoritative answers are determined at the end of processing, but we want them to be seen first during reading:
