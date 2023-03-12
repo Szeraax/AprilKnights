@@ -111,8 +111,11 @@ elseif ($QueueItem.Command -eq "RESPONSE_GATEWATCH_DISCUSS_CANDIDATE") {
         try {
             $irm_splat.Uri = "https://discord.com/api/channels/$($QueueItem.ParentChannelID)/threads"
             $res = Invoke-RestMethod @irm_splat -Method post -ea stop -Body ( @{
-                    name = "${last4}: $($QueueItem.Username)"
-                    type = 11
+                    name    = "${last4}: $($QueueItem.Username)"
+                    message = @{
+                        content = "From: <#$($channel.id)>"
+                    }
+                    type    = 11
                 } | ConvertTo-Json)
             $response = "Created! <#$($res.id)>"
         }
