@@ -24,67 +24,6 @@ if ($QueueItem.Command -eq "RESPONSE_GATEWATCH_ASSIGN_BATTALION") {
     $inError = $false
     $channel_name, $role_name = $QueueItem.Values -split ",", 2
 
-    try {
-        $embed = @{
-            title       = "Announce user in battalion"
-            color       = 0x00ff00
-            description = [System.Collections.Generic.List[string]]@()
-        }
-        $irm_splat.Uri = "https://discord.com/api/guilds/$($QueueItem.GuildID)/channels"
-        $channels = Invoke-RestMethod @irm_splat
-        $channel = $channels | Where-Object { $_.id -eq $channel_name -or $_.name -eq $channel_name }
-
-        # $member = Invoke-RestMethod @irm_splat -Uri "https://discord.com/api/guilds/$($QueueItem.GuildID)/members/$($QueueItem.DiscordUserID)"
-        $irm_splat.Uri = "https://discord.com/api/channels/$($channel.id)/messages"
-        $channels = Invoke-RestMethod @irm_splat -Method Post -Body (@{
-                content = "Please welcome the newest member of the battalion,  <@$($QueueItem.DiscordUserID)>"
-            } | ConvertTo-Json)
-        $embed.description.Add("Did announce Knight in battalion channel <#$($channel.id)>")
-    }
-    catch {
-        $inError = $true
-        $embed.description.Add("Error message: $_")
-        $embed.description.Add("Did not announce Knight in battalion ($channel_name/$($channel.id)). Please try this command again or complete manually.")
-        $embed.description = $embed.description.Reverse() -join "`n"
-        $embed.color = 0xff0000
-        $_
-    }
-    finally {
-        $embeds += $embed
-    }
-
-    try {
-        $embed = @{
-            title       = "Add user to role"
-            color       = 0x00ff00
-            description = [System.Collections.Generic.List[string]]@()
-        }
-        $irm_splat.Uri = "https://discord.com/api/guilds/$($QueueItem.GuildID)/roles"
-        $roles = Invoke-RestMethod @irm_splat
-        $role = $roles | Where-Object { $_.id -eq $role_name -or $_.name -eq $role_name }
-        $irm_splat.Uri = "https://discord.com/api/guilds/$($QueueItem.GuildID)/members/$($QueueItem.DiscordUserID)/roles/$($role.id)"
-        try {
-            Invoke-RestMethod @irm_splat -Method Put
-        }
-        catch {
-            if (($_ | ConvertFrom-Json).message -match "Missing Permissions") {
-                $embed.description.Add("'Missing Permissions' error while adding user to role. Is the Bot role above ``$($role.name)`` in the server roles?")
-            }
-            throw $_
-        }
-        $embed.description.Add("Did add knight to role ``$($role.name)``")
-    }
-    catch {
-        $inError = $true
-        $embed.description.Add("Error message: $_")
-        $embed.description.Add("Did not add knight to battalion ($role_name/$($role.name)). Please try again or do so manually.")
-        $embed.description = $embed.description.Reverse() -join "`n"
-        $embed.color = 0xff0000
-        $_
-    }
-    finally {
-        $embeds += $embed
-    }
 
     try {
         $embed = @{
@@ -183,6 +122,70 @@ if ($QueueItem.Command -eq "RESPONSE_GATEWATCH_ASSIGN_BATTALION") {
         $inError = $true
         $embed.description.Add("Error message: $_")
         $embed.description.Add("Did not remove knight from role ($this_role/$($role.name)). Please try again or do so manually.")
+        $embed.description = $embed.description.Reverse() -join "`n"
+        $embed.color = 0xff0000
+        $_
+    }
+    finally {
+        $embeds += $embed
+    }
+
+
+
+    try {
+        $embed = @{
+            title       = "Add user to role"
+            color       = 0x00ff00
+            description = [System.Collections.Generic.List[string]]@()
+        }
+        $irm_splat.Uri = "https://discord.com/api/guilds/$($QueueItem.GuildID)/roles"
+        $roles = Invoke-RestMethod @irm_splat
+        $role = $roles | Where-Object { $_.id -eq $role_name -or $_.name -eq $role_name }
+        $irm_splat.Uri = "https://discord.com/api/guilds/$($QueueItem.GuildID)/members/$($QueueItem.DiscordUserID)/roles/$($role.id)"
+        try {
+            Invoke-RestMethod @irm_splat -Method Put
+        }
+        catch {
+            if (($_ | ConvertFrom-Json).message -match "Missing Permissions") {
+                $embed.description.Add("'Missing Permissions' error while adding user to role. Is the Bot role above ``$($role.name)`` in the server roles?")
+            }
+            throw $_
+        }
+        $embed.description.Add("Did add knight to role ``$($role.name)``")
+    }
+    catch {
+        $inError = $true
+        $embed.description.Add("Error message: $_")
+        $embed.description.Add("Did not add knight to battalion ($role_name/$($role.name)). Please try again or do so manually.")
+        $embed.description = $embed.description.Reverse() -join "`n"
+        $embed.color = 0xff0000
+        $_
+    }
+    finally {
+        $embeds += $embed
+    }
+
+    try {
+        $embed = @{
+            title       = "Announce user in battalion"
+            color       = 0x00ff00
+            description = [System.Collections.Generic.List[string]]@()
+        }
+        $irm_splat.Uri = "https://discord.com/api/guilds/$($QueueItem.GuildID)/channels"
+        $channels = Invoke-RestMethod @irm_splat
+        $channel = $channels | Where-Object { $_.id -eq $channel_name -or $_.name -eq $channel_name }
+
+        # $member = Invoke-RestMethod @irm_splat -Uri "https://discord.com/api/guilds/$($QueueItem.GuildID)/members/$($QueueItem.DiscordUserID)"
+        $irm_splat.Uri = "https://discord.com/api/channels/$($channel.id)/messages"
+        $channels = Invoke-RestMethod @irm_splat -Method Post -Body (@{
+                content = "Please welcome the newest member of the battalion,  <@$($QueueItem.DiscordUserID)>"
+            } | ConvertTo-Json)
+        $embed.description.Add("Did announce Knight in battalion channel <#$($channel.id)>")
+    }
+    catch {
+        $inError = $true
+        $embed.description.Add("Error message: $_")
+        $embed.description.Add("Did not announce Knight in battalion ($channel_name/$($channel.id)). Please try this command again or complete manually.")
         $embed.description = $embed.description.Reverse() -join "`n"
         $embed.color = 0xff0000
         $_
