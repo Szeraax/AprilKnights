@@ -28,7 +28,7 @@ if ($QueueItem.Command -eq "RESPONSE_GATEWATCH_ASSIGN_BATTALION") {
     try {
         $embed = @{
             title       = "Add user to role"
-            color       = 0x00ff00
+            color       = 0x00aa00
             description = [System.Collections.Generic.List[string]]@()
         }
         $this_role = 'Recruit'
@@ -52,18 +52,20 @@ if ($QueueItem.Command -eq "RESPONSE_GATEWATCH_ASSIGN_BATTALION") {
         $inError = $true
         $embed.description.Add("Error message: $_")
         $embed.description.Add("Did not add knight to role ($this_role/$($role.name)). Please try again or do so manually.")
-        $embed.description = $embed.description.Reverse() -join "`n"
+        $embed.description.Reverse()
+        $embed.description = $embed.description -join "`n"
         $embed.color = 0xff0000
         $_
     }
     finally {
         $embeds += $embed
+        "Description:", $embed.description | Write-Host
     }
 
     try {
         $embed = @{
             title       = "Add user to role"
-            color       = 0x00ff00
+            color       = 0x00aa00
             description = [System.Collections.Generic.List[string]]@()
         }
         $this_role = 'Knight'
@@ -87,18 +89,20 @@ if ($QueueItem.Command -eq "RESPONSE_GATEWATCH_ASSIGN_BATTALION") {
         $inError = $true
         $embed.description.Add("Error message: $_")
         $embed.description.Add("Did not add knight to role ($this_role/$($role.name)). Please try again or do so manually.")
-        $embed.description = $embed.description.Reverse() -join "`n"
+        $embed.description.Reverse()
+        $embed.description = $embed.description -join "`n"
         $embed.color = 0xff0000
         $_
     }
     finally {
         $embeds += $embed
+        "Description:", $embed.description | Write-Host
     }
 
     try {
         $embed = @{
             title       = "Remove user from role"
-            color       = 0x00ff00
+            color       = 0x00aa00
             description = [System.Collections.Generic.List[string]]@()
         }
         $this_role = 'Guest'
@@ -122,12 +126,14 @@ if ($QueueItem.Command -eq "RESPONSE_GATEWATCH_ASSIGN_BATTALION") {
         $inError = $true
         $embed.description.Add("Error message: $_")
         $embed.description.Add("Did not remove knight from role ($this_role/$($role.name)). Please try again or do so manually.")
-        $embed.description = $embed.description.Reverse() -join "`n"
+        $embed.description.Reverse()
+        $embed.description = $embed.description -join "`n"
         $embed.color = 0xff0000
         $_
     }
     finally {
         $embeds += $embed
+        "Description:", $embed.description | Write-Host
     }
 
 
@@ -135,7 +141,7 @@ if ($QueueItem.Command -eq "RESPONSE_GATEWATCH_ASSIGN_BATTALION") {
     try {
         $embed = @{
             title       = "Add user to role"
-            color       = 0x00ff00
+            color       = 0x00aa00
             description = [System.Collections.Generic.List[string]]@()
         }
         $irm_splat.Uri = "https://discord.com/api/guilds/$($QueueItem.GuildID)/roles"
@@ -157,18 +163,20 @@ if ($QueueItem.Command -eq "RESPONSE_GATEWATCH_ASSIGN_BATTALION") {
         $inError = $true
         $embed.description.Add("Error message: $_")
         $embed.description.Add("Did not add knight to battalion ($role_name/$($role.name)). Please try again or do so manually.")
-        $embed.description = $embed.description.Reverse() -join "`n"
+        $embed.description.Reverse()
+        $embed.description = $embed.description -join "`n"
         $embed.color = 0xff0000
         $_
     }
     finally {
         $embeds += $embed
+        "Description:", $embed.description | Write-Host
     }
 
     try {
         $embed = @{
             title       = "Announce user in battalion"
-            color       = 0x00ff00
+            color       = 0x00aa00
             description = [System.Collections.Generic.List[string]]@()
         }
         $irm_splat.Uri = "https://discord.com/api/guilds/$($QueueItem.GuildID)/channels"
@@ -186,12 +194,14 @@ if ($QueueItem.Command -eq "RESPONSE_GATEWATCH_ASSIGN_BATTALION") {
         $inError = $true
         $embed.description.Add("Error message: $_")
         $embed.description.Add("Did not announce Knight in battalion ($channel_name/$($channel.id)). Please try this command again or complete manually.")
-        $embed.description = $embed.description.Reverse() -join "`n"
+        $embed.description.Reverse()
+        $embed.description = $embed.description -join "`n"
         $embed.color = 0xff0000
         $_
     }
     finally {
         $embeds += $embed
+        "Description:", $embed.description | Write-Host
     }
 
     if ($inError) {
