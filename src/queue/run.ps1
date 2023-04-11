@@ -4,6 +4,10 @@ param($QueueItem, $TriggerMetadata)
 # Write out the queue message and insertion time to the information log.
 Write-Host "Queue item insertion time: $($TriggerMetadata.InsertionTime)"
 
+if ($TriggerMetadata.DequeueCount -gt 3) {
+    return "Too many failures. Skipping."
+}
+
 $item = $QueueItem
 
 if ($uri = $item.data.options.where{ $_.name -eq "link" }.value) {
@@ -41,12 +45,14 @@ elseif ($item.Code) {
         Uri    = "$baseUri/oauth2/token"
         Body   = $invokeRestMethod_body
     }
+    $invokeRestMethod_GetTokenSplat | ConvertTo-Json -Compress -Depth 10 | Write-Host
     $body = "called token"
     try {
         $userToken = Invoke-RestMethod @irmSplat @invokeRestMethod_GetTokenSplat
     }
     catch {
         $body = "Failed to authorize, could not get authorization from Discord"
+        $_
         throw $body
     }
 
@@ -54,10 +60,12 @@ elseif ($item.Code) {
         $Headers = @{Authorization = "Bearer {0}" -f $userToken.access_token }
         $irmSplat.Uri = "$baseUri/users/@me"
         $user = Invoke-RestMethod @irmSplat -Headers $Headers
+        $user | ConvertTo-Json -Depth 10 | Write-Verbose
         # $irmSplat.Uri = "$baseUri/users/@me/guilds"
         # $userGuilds = Invoke-RestMethod @irmSplat -Headers $Headers
         $irmSplat.Uri = "$baseUri/users/@me/connections"
         $userConnections = Invoke-RestMethod @irmSplat -Headers $Headers
+        $userConnections | ConvertTo-Json -Depth 10 | Write-Verbose
 
         $data = [ordered]@{
             DiscordId   = $user.id
@@ -66,7 +74,12 @@ elseif ($item.Code) {
             Locale      = $user.locale
         }
 
-        if ($reddituser = $userConnections | Where-Object type -EQ "reddit") {
+        if (-not ($userConnections | Where-Object type -EQ "reddit")) {
+            Write-Debug "No connections found. Skipping"
+            $redditMessage = "NOT FOUND!`n<@{0}>, you need to connect your Discord account to your Reddit account for verification. Once complete, please run the command again." -f $user.id
+        }
+        foreach ($reddituser in $userConnections | Where-Object type -EQ "reddit") {
+            "Processing connection for account $($reddituser.name)" | Write-Verbose
             $data.RedditUser = $reddituser.name
             $threads = Get-ChildItem ENV:APP_OATH_* | Sort-Object Name -Desc | Select-Object -expand Value
             $attempt = 0
@@ -114,6 +127,10 @@ elseif ($item.Code) {
                 if ($current -gt 0) {
                     $redditMessage += "`nError: No comments in current oath thread. Please have applicant pledge in the current oath thread"
                 }
+
+                # When you have multiple reddit accounts counnected to discord, it is assume that only one of them will be to the April Knights.
+                # Find the first account that has userComments in a AK thread and don't search the rest of the accounts thereafter.
+                break
             }
             elseif ($attempt -gt 3) {
                 $response = "Error occurred. Please try again."
@@ -126,9 +143,7 @@ elseif ($item.Code) {
                 )
             }
         }
-        else {
-            $redditMessage = "NOT FOUND!`n<@{0}>, you need to connect your Discord account to your Reddit account for verification. Once complete, please run the command again." -f $user.id
-        }
+
 
         $AzDataTableEntity_params = @{
             ConnectionString = $ENV:AzureWebJobsStorage
