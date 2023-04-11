@@ -1,6 +1,86 @@
 # Input bindings are passed in via param block.
 param($QueueItem, $TriggerMetadata)
 
+function Set-DiscordRoleMembership {
+    param(
+        [Alias('InputObject')]
+        [Parameter(ValueFromPipeline)]
+        [string[]]$RoleName,
+
+        # PUT method adds a user to a role. DELETE removes.
+        # If PUT, will not error if user is already part of the role
+        # If DELETE, will not error if user is already not part of the role
+        [ValidateSet("PUT", "DELETE")]
+        $Method
+    )
+    begin {
+
+
+        $return = @{
+            inError = $false
+            embeds  = [System.Collections.Generic.List[hashtable]]@()
+        }
+    }
+
+    process {
+        foreach ($item in $RoleName) {
+            "Processing $Item" | Write-Host
+            switch ($Method) {
+                "PUT" {
+                    $ErrorMessage = { "Did not add knight to role ($item/$($role.name)). Please try again or do so manually." }
+                    $SuccessMessage = { "Did add knight to role ($item/$($role.name))." }
+                }
+                "DELETE" {
+                    $ErrorMessage = { "Did not remove knight from role ($item/$($role.name)). Please try again or do so manually." }
+                    $SuccessMessage = { "Did remove knight from role ($item/$($role.name))." }
+                }
+            }
+
+            try {
+                $embed = @{
+                    title       = "Edit user role membership"
+                    color       = 0x00aa00
+                    description = [System.Collections.Generic.List[string]]@()
+                }
+                $irm_splat.Uri = "https://discord.com/api/guilds/$($QueueItem.GuildID)/roles"
+                $roles = Invoke-RestMethod @irm_splat
+                $role = $roles | Where-Object { $_.id -eq $item -or $_.name -eq $item } | Select-Object -First 1
+                $irm_splat.Uri = "https://discord.com/api/guilds/$($QueueItem.GuildID)/members/$($QueueItem.DiscordUserID)/roles/$($role.id)"
+                try {
+                    Invoke-RestMethod @irm_splat -Method $Method
+                }
+                catch {
+                    if (($_ | ConvertFrom-Json).message -match "Missing Permissions") {
+                        $embed.description.Add("'Missing Permissions' error while edit user role. Is the Bot role above ``$this_role`` in the server roles?")
+                    }
+                    throw $_
+
+                }
+                $embed.description.Add($SuccessMessage.Invoke()[0])
+            }
+            catch {
+                $return.inError = $true
+                $embed.description.Add("Error message: $_")
+                $embed.description.Add($ErrorMessage.Invoke()[0])
+                $embed.description.Reverse()
+                $embed.description = $embed.description -join "`n"
+                $embed.color = 0xff0000
+                $_
+            }
+            finally {
+                $return.embeds.Add($embed)
+                "Description:", $embed.description | Write-Host
+            }
+        }
+    }
+
+    end {
+        $return
+    }
+}
+
+
+
 # Write out the queue message and insertion time to the information log.
 Write-Host "PowerShell queue trigger function processed work item: $QueueItem"
 Write-Host "Queue item insertion time: $($TriggerMetadata.InsertionTime)"
@@ -25,153 +105,17 @@ if ($QueueItem.Command -eq "RESPONSE_GATEWATCH_ASSIGN_BATTALION") {
     $channel_name, $role_name = $QueueItem.Values -split ",", 2
 
 
-    try {
-        $embed = @{
-            title       = "Add user to role"
-            color       = 0x00aa00
-            description = [System.Collections.Generic.List[string]]@()
-        }
-        $this_role = 'Recruit'
-        $irm_splat.Uri = "https://discord.com/api/guilds/$($QueueItem.GuildID)/roles"
-        $roles = Invoke-RestMethod @irm_splat
-        $role = $roles | Where-Object { $_.name -eq $this_role }
-        $irm_splat.Uri = "https://discord.com/api/guilds/$($QueueItem.GuildID)/members/$($QueueItem.DiscordUserID)/roles/$($role.id)"
-        try {
-            Invoke-RestMethod @irm_splat -Method Put
-        }
-        catch {
-            if (($_ | ConvertFrom-Json).message -match "Missing Permissions") {
-                $embed.description.Add("'Missing Permissions' error while adding user to role. Is the Bot role above ``$this_role`` in the server roles?")
-            }
-            throw $_
+    $results = Set-DiscordRoleMembership -Method PUT -RoleName "Recruit", "Knight", $role_name
+    $embeds += $results.embeds
+    if ($results.inError | Where-Object { $_ -eq $true }) { $inError = $true }
 
-        }
-        $embed.description.Add("Did add knight to role ``$this_role``")
-    }
-    catch {
-        $inError = $true
-        $embed.description.Add("Error message: $_")
-        $embed.description.Add("Did not add knight to role ($this_role/$($role.name)). Please try again or do so manually.")
-        $embed.description.Reverse()
-        $embed.description = $embed.description -join "`n"
-        $embed.color = 0xff0000
-        $_
-    }
-    finally {
-        $embeds += $embed
-        "Description:", $embed.description | Write-Host
-    }
-
-    try {
-        $embed = @{
-            title       = "Add user to role"
-            color       = 0x00aa00
-            description = [System.Collections.Generic.List[string]]@()
-        }
-        $this_role = 'Knight'
-        $irm_splat.Uri = "https://discord.com/api/guilds/$($QueueItem.GuildID)/roles"
-        $roles = Invoke-RestMethod @irm_splat
-        $role = $roles | Where-Object { $_.name -eq $this_role }
-        $irm_splat.Uri = "https://discord.com/api/guilds/$($QueueItem.GuildID)/members/$($QueueItem.DiscordUserID)/roles/$($role.id)"
-        try {
-            Invoke-RestMethod @irm_splat -Method Put
-        }
-        catch {
-            if (($_ | ConvertFrom-Json).message -match "Missing Permissions") {
-                $embed.description.Add("'Missing Permissions' error while adding user to role. Is the Bot role above ``$this_role`` in the server roles?")
-            }
-            throw $_
-
-        }
-        $embed.description.Add("Did add knight to role ``$this_role``")
-    }
-    catch {
-        $inError = $true
-        $embed.description.Add("Error message: $_")
-        $embed.description.Add("Did not add knight to role ($this_role/$($role.name)). Please try again or do so manually.")
-        $embed.description.Reverse()
-        $embed.description = $embed.description -join "`n"
-        $embed.color = 0xff0000
-        $_
-    }
-    finally {
-        $embeds += $embed
-        "Description:", $embed.description | Write-Host
-    }
-
-    try {
-        $embed = @{
-            title       = "Remove user from role"
-            color       = 0x00aa00
-            description = [System.Collections.Generic.List[string]]@()
-        }
-        $this_role = 'Guest'
-        $irm_splat.Uri = "https://discord.com/api/guilds/$($QueueItem.GuildID)/roles"
-        $roles = Invoke-RestMethod @irm_splat
-        $role = $roles | Where-Object { $_.name -eq $this_role }
-        $irm_splat.Uri = "https://discord.com/api/guilds/$($QueueItem.GuildID)/members/$($QueueItem.DiscordUserID)/roles/$($role.id)"
-        try {
-            Invoke-RestMethod @irm_splat -Method Delete
-        }
-        catch {
-            if (($_ | ConvertFrom-Json).message -match "Missing Permissions") {
-                $embed.description.Add("'Missing Permissions' error while edit user role. Is the Bot role above ``$this_role`` in the server roles?")
-            }
-            throw $_
-
-        }
-        $embed.description.Add("Did remove knight from role ``$this_role``")
-    }
-    catch {
-        $inError = $true
-        $embed.description.Add("Error message: $_")
-        $embed.description.Add("Did not remove knight from role ($this_role/$($role.name)). Please try again or do so manually.")
-        $embed.description.Reverse()
-        $embed.description = $embed.description -join "`n"
-        $embed.color = 0xff0000
-        $_
-    }
-    finally {
-        $embeds += $embed
-        "Description:", $embed.description | Write-Host
-    }
+    $results = Set-DiscordRoleMembership -Method DELETE -RoleName "Guest", "Lance"
+    $embeds += $results.embeds
+    if ($results.inError | Where-Object { $_ -eq $true }) { $inError = $true }
 
 
 
-    try {
-        $embed = @{
-            title       = "Add user to role"
-            color       = 0x00aa00
-            description = [System.Collections.Generic.List[string]]@()
-        }
-        $irm_splat.Uri = "https://discord.com/api/guilds/$($QueueItem.GuildID)/roles"
-        $roles = Invoke-RestMethod @irm_splat
-        $role = $roles | Where-Object { $_.id -eq $role_name -or $_.name -eq $role_name }
-        $irm_splat.Uri = "https://discord.com/api/guilds/$($QueueItem.GuildID)/members/$($QueueItem.DiscordUserID)/roles/$($role.id)"
-        try {
-            Invoke-RestMethod @irm_splat -Method Put
-        }
-        catch {
-            if (($_ | ConvertFrom-Json).message -match "Missing Permissions") {
-                $embed.description.Add("'Missing Permissions' error while adding user to role. Is the Bot role above ``$($role.name)`` in the server roles?")
-            }
-            throw $_
-        }
-        $embed.description.Add("Did add knight to role ``$($role.name)``")
-    }
-    catch {
-        $inError = $true
-        $embed.description.Add("Error message: $_")
-        $embed.description.Add("Did not add knight to battalion ($role_name/$($role.name)). Please try again or do so manually.")
-        $embed.description.Reverse()
-        $embed.description = $embed.description -join "`n"
-        $embed.color = 0xff0000
-        $_
-    }
-    finally {
-        $embeds += $embed
-        "Description:", $embed.description | Write-Host
-    }
+
 
     try {
         $embed = @{
