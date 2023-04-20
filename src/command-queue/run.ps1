@@ -43,7 +43,10 @@ function Set-DiscordRoleMembership {
                     description = [System.Collections.Generic.List[string]]@()
                 }
                 $irm_splat.Uri = "https://discord.com/api/guilds/$($QueueItem.GuildID)/roles"
-                $roles = Invoke-RestMethod @irm_splat
+                if (-not $roles.count) {
+                    Write-Host "Getting roles"
+                    $roles = Invoke-RestMethod @irm_splat
+                }
                 $role = $roles | Where-Object { $_.id -eq $item -or $_.name -eq $item } | Select-Object -First 1
                 $irm_splat.Uri = "https://discord.com/api/guilds/$($QueueItem.GuildID)/members/$($QueueItem.DiscordUserID)/roles/$($role.id)"
                 try {
@@ -104,6 +107,10 @@ if ($QueueItem.Command -eq "RESPONSE_GATEWATCH_ASSIGN_BATTALION") {
     $inError = $false
     $channel_name, $role_name = $QueueItem.Values -split ",", 2
 
+    Write-Host "Getting roles"
+    $irm_splat.Uri = "https://discord.com/api/guilds/$($QueueItem.GuildID)/roles"
+    $roles = Invoke-RestMethod @irm_splat
+    $role = $roles | Where-Object { $_.id -eq $role_name -or $_.name -eq $role_name } | Select-Object -First 1
 
     $results = Set-DiscordRoleMembership -Method PUT -RoleName "Recruit", "Knight", $role_name
     $embeds += $results.embeds
