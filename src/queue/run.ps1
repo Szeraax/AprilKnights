@@ -84,33 +84,7 @@ elseif ($item.Code) {
             $threads = Get-ChildItem ENV:APP_OATH_* | Sort-Object Name -Desc | Select-Object -expand Value
             $attempt = 0
             $current = 0
-            do {
-                if ($threads[$current]) {
-                    try {
-                        $irmSplat.Uri = $threads[$current] + ".json"
-                        "URI:{0}" -f $irmSplat.Uri | Write-Host
-                        $pledges = Invoke-RestMethod @irmSplat
-                        $comments = Get-Comments $pledges[1..9999]
-                        $userComments = $comments | Where-Object author -EQ $data.redditUser | Sort-Object -desc created | Sort-Object depth
-                        "Current: $current, Comments count: {0}, user comments count: {1}" -f $comments.count, $userComments.count | Write-Host
-                        if (-not $userComments) {
-                            $current++
-                            $attempt = 0
-                        }
-                    }
-                    catch {
-                        "Failed $_" | Write-Host
-                        $attempt++
-                        Start-Sleep 3
-                        if ($attempt -gt 3) {
-                            $response = "Error occurred. Please try again."
-                        }
-                    }
-                }
-                else {
-                    $attempt++
-                }
-            } until ($userComments -or $attempt -gt 3 -or $current -ge $threads.count)
+
             $redditMessage = ""
             if ($userComments) {
                 if ($userComments.count -gt 1) {
@@ -136,7 +110,7 @@ elseif ($item.Code) {
                 $response = "Error occurred. Please try again."
             }
             else {
-                $redditMessage = "{0}. They HAVE NOT left any comment in the pledge thread located here:`n{1}`n<@{2}>, you need to go pledge your support in this thread.`n`nOnce complete, please run the ``/interview verify reddit`` command again." -f @(
+                $redditMessage = "{0} (https://reddit.com/u/{0}).`n`nBuilder, please go to the [latest oath thread]({1}) and manually verify if there is a pledge present for this user. Then report back here and announce if the pledge was present. `n`n<@{2}>, you can now remove this discord/reddit connection in your Discord settings if you wish." -f @(
                     $data.redditUser
                     $threads[0]
                     $user.id
